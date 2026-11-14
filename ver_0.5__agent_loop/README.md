@@ -2,7 +2,8 @@
 
 **버전:** v5.1  
 **제목:** [AI 에이전트 개발] ③ AI 에이전트는 어떻게 스스로 반복 실행할까?  
-**기반 소스:** `01_agent_step.ipynb`, `02_agent_run.ipynb`, `agent_core.py`, `agent_runner.py`, `agent_tools.py`
+**소스 구조 :**
+```text
 Agent Loop 실습
 │
 ├── 01_agent_step.ipynb   # 판단과 실행을 한 번씩 실습
@@ -20,7 +21,33 @@ Agent Loop 실습
 └── agent_tools.py        # 실제 도구 구현
     ├── check_calendar()  # 출장 일정 확인
     └── search_transport()# KTX/BUS 좌석 검색
+```
+**Agent Loop 실행 흐름 :**
+```mermaid
+flowchart TD
+    A["01_agent_step.ipynb<br/>수동 실행"] --> C["step()"]
+    B["02_agent_run.ipynb<br/>자동 실행"] --> D["run()"]
 
+    subgraph Runner["agent_runner.py"]
+        D -->|"반복 호출"| C
+        C --> E["ask_llm()"]
+        H["현재 상태·이력 갱신"]
+    end
+
+    subgraph Core["agent_core.py"]
+        E --> F{"action 있음?"}
+        F -->|"있음"| G["execute_action()"]
+    end
+
+    subgraph Tools["agent_tools.py"]
+        G --> T["check_calendar()<br/>search_transport()"]
+    end
+
+    T --> H
+    H -.->|"다음 판단"| E
+    F -->|"None"| I["종료"]
+```
+    
 > 핵심: LLM은 현재 상태와 실행 이력을 보고 다음 행동과 실행 인자를 선택하고, Agent Loop는 `step()`을 반복 호출해 작업을 이어갑니다.
 
 ## 1. 인트로 — 매번 실행하지 않아도 된다면?
